@@ -1,8 +1,6 @@
 name: Build Arch ISO with LTS Kernel and ZFS
 on:
   workflow_dispatch:
-  schedule:
-    - cron:  '30 4 4 * *'
 
 permissions:
   contents: write
@@ -89,17 +87,7 @@ jobs:
           [ -d /tmp/"$name" ] && cd /tmp ; rm -rf "$name"
           mkarchiso -v -w /tmp/"$name" -o "$build_out" "$build"
           
-          cd "$build_out"
-          ls -alh
-          mkdir extracted && cd extracted
-          osirrox -indev "../archlinux-lts-zfs-$release_date-x86_64.iso" -extract_boot_images ./ -extract /EFI/BOOT/BOOTx64.EFI loader.efi
-          curl -o BOOTx64.EFI https://blog.hansenpartnership.com/wp-uploads/2013/PreLoader.efi
-          curl -o HashTool.efi https://blog.hansenpartnership.com/wp-uploads/2013/HashTool.efi
-          mcopy -D oO -i eltorito_img2_uefi.img BOOTx64.EFI loader.efi HashTool.efi ::/EFI/BOOT/
-          xorriso -indev ../archlinux-lts-zfs-$release_date-x86_64.iso -outdev archlinux-lts-zfs-sb-$release_date-x86_64.iso -map_l ./ /EFI/BOOT/ BOOTx64.EFI loader.efi HashTool.efi -- -boot_image any replay -append_partition 2 0xef eltorito_img2_uefi.img
-          mv archlinux-lts-zfs-sb-$release_date-x86_64.iso ../archlinux-lts-zfs-$release_date-x86_64.iso
-          cd .. && rm -rf extracted
-          
+          cd "$build_out"          
           sha256sum archlinux-lts-zfs-$release_date-x86_64.iso > archlinux-lts-zfs-$release_date-x86_64.iso.sha256
           
           echo "KERNEL_VERSION=$(chroot /tmp/$name/x86_64/airootfs pacman -Q linux-lts | sed 's/\s\+/:/')" >> ${GITHUB_OUTPUT}
